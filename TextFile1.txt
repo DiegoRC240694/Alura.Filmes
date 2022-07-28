@@ -1,0 +1,139 @@
+using System;
+using System.Collections.Generic;
+
+namespace Alura.Filmes.App.Negocio
+{
+    public struct Classificacao
+    {
+        public static readonly Classificacao Livre = new Classificacao("G");
+        public static readonly Classificacao DezAnos = new Classificacao("PG");
+        public static readonly Classificacao TrezeAnos = new Classificacao("PG-13");
+        public static readonly Classificacao QuatorzeAnos = new Classificacao("R");
+        public static readonly Classificacao DezoitoAnos = new Classificacao("NC-17");
+        public static readonly Classificacao Vazio = new Classificacao();
+
+        private static readonly Dictionary<string, Classificacao> mapa = new Dictionary<string, Classificacao>()
+        {
+            //Ja que pra converter pra string é só usar o metodo ToString() não vai ser preciso
+            //usar o dicionario para converter de Classificacao para string.
+            //Esse dicionario serve para converter de string para Classificacao, por isso as chaves são strings.
+            { "G", Livre},
+            { "PG", DezAnos},
+            { "PG-13", TrezeAnos},
+            { "R", QuatorzeAnos},
+            { "NC-17", DezoitoAnos}
+        };
+
+        //O valor string predefinido no construtor.
+        //Uma boa struct não deveria ter valores que mudam dentro dela, então o set
+        //da propriedade é privado pra proibir que isso aconteça. Para mudar tem que
+        //criar uma nova instancia da estrutura
+        public string Categoria { get; private set; }
+
+
+        //O construtor privado proibe a criação de uma nova instancia fora da classe.
+        //O usuario é forçado a usar uma das propriedades estaticas predefinidas ou o
+        //metodo GetClassificacao() para inicializar uma nova classificação
+        private Classificacao(string valor = null)
+        {
+            Categoria = valor;
+        }
+
+        //Usado para converter um valor string vindo do banco de dados para um tipo Classificação.
+        public static Classificacao GetClassificacao(string valor)
+        {
+            if(valor == null) //O banco de dados aceita nulo, então pode ser que o valor seja nulo.
+            {
+                return new Classificacao(); //A categoria vai ter o valor nulo.
+            }
+
+            if (mapa.ContainsKey(valor))
+            {
+                return mapa[valor];
+            }
+            else
+            {
+                throw new ArgumentException($"Não foi possivel converter o valor '{valor}' para uma classificação.");
+            }
+        }
+
+        public override string ToString()
+        {
+            return Categoria;
+        }
+    }
+}
+
+//////////////
+
+    public class Filme
+    {
+        . . .
+
+        public string TextoClassificacao { get; private set; }
+        public Classificacao Classificacao
+        {
+            get
+            {
+                return Classificacao.GetClassificacao(TextoClassificacao);
+            }
+            set
+            {
+                TextoClassificacao = value.ToString();
+            }
+        }
+
+        . . .
+    }
+
+
+    /////////////////////////////////////
+    public static class ClassificacaoExtension
+    {
+        private static Dictionary<ClassificacaoIndicativa, string> mapa = new Dictionary<ClassificacaoIndicativa, string>()
+        {
+            { ClassificacaoIndicativa.Livre, "G"},
+            { ClassificacaoIndicativa.DezAnos, "PG"},
+            { ClassificacaoIndicativa.TrezeAnos, "PG-13"},
+            { ClassificacaoIndicativa.QuatorzeAnos, "R"},
+            { ClassificacaoIndicativa.DezoitoAnos, "NC-17"}
+        };
+
+        public static string ParaString(this ClassificacaoIndicativa valor)
+        {
+            return mapa[valor];
+        }
+
+        public static ClassificacaoIndicativa ParaValor(this string valor)
+        {
+            return mapa.First(d => d.Value == valor).Key;
+        }
+
+    }
+
+                    Console.WriteLine("Para string:");
+                Console.WriteLine(ClassificacaoIndicativa.Livre.ParaString());
+                Console.WriteLine(ClassificacaoIndicativa.DezoitoAnos.ParaString());
+
+                Console.WriteLine("\nPara valor:");
+                Console.WriteLine("PG".ParaValor());
+                Console.WriteLine("PG-13".ParaValor());
+
+
+
+                CREATE TABLE [dbo].[language] (
+    [language_id] TINYINT   IDENTITY (1, 1) NOT NULL,
+    [name]        CHAR (20) NOT NULL,
+    [last_update] DATETIME  CONSTRAINT [df_language_last_update] DEFAULT (getdate()) NOT NULL,
+    CONSTRAINT [pk_language] PRIMARY KEY NONCLUSTERED ([language_id] ASC)
+);
+
+
+
+CREATE TABLE [dbo].[language] (
+    [language_id] TINYINT   NOT NULL,
+    [name]        CHAR (20) NOT NULL,
+    [last_update] DATETIME  DEFAULT (getdate()) NOT NULL,
+    CONSTRAINT [PK_language] PRIMARY KEY CLUSTERED ([language_id] ASC)
+);
+
